@@ -1,0 +1,2 @@
+Model,Precision,Recall,mAP50,mAP50_95
+YOLO11s,0.98,0.972,0.992,0.875
