@@ -2,9 +2,12 @@
 Conversion GTSDB -> YOLO (YOLO11, RT-DETR) + COCO JSON (Faster R-CNN)
 avec split FIXE (sauvegardé dans splits/split.json).
 
+Deux cas gérés automatiquement :
+  - dataset complet (900 images annotées) : train/val = images 0..599, test = 600..899
+  - TrainIJCNN2013 seul (600 images)      : split 70 / 15 / 15 par blocs d'images consécutives
+
 Usage :
-    python -m src.data.convert_gtsdb --mode 4cls
-    python -m src.data.convert_gtsdb --mode 43cls
+    python -m src.data.convert_gtsdb --mode 4cls --raw /kaggle/input
 """
 import argparse
 import json
@@ -19,19 +22,38 @@ from src.data.gtsdb import find_gt, list_images, parse_gt
 from src.utils import ROOT, load_config
 
 
-def make_split(names, last_idx, val_ratio, block, seed):
+def _chunks(names, block):
+    return [names[i:i + block] for i in range(0, len(names), block)]
+
+
+def _flat(blocks):
+    return sorted(n for b in blocks for n in b)
+
+
+def make_split(names, last_idx, val_ratio, block, seed,
+               val_ratio_no_test=0.15, test_ratio_no_test=0.15):
     names = sorted(names)  # stems : "00000", "00001", ...
     trainval = [n for n in names if int(n) <= last_idx]
     test = [n for n in names if int(n) > last_idx]
-    # blocs d'images consécutives : on évite que des images quasi identiques
-    # (même séquence) se retrouvent à la fois en train et en val
-    blocks = [trainval[i:i + block] for i in range(0, len(trainval), block)]
     rng = random.Random(seed)
+
+    # blocs d'images consécutives : on évite que des images quasi identiques
+    # (même séquence) se retrouvent dans deux sous-ensembles différents
+    if test:  # dataset complet : le test officiel existe
+        blocks = _chunks(trainval, block)
+        rng.shuffle(blocks)
+        n_val = round(len(blocks) * val_ratio)
+        return {"train": _flat(blocks[n_val:]), "val": _flat(blocks[:n_val]),
+                "test": sorted(test)}
+
+    # pas de test officiel annoté (TrainIJCNN2013 seul) : split 3 voies
+    blocks = _chunks(names, block)
     rng.shuffle(blocks)
-    n_val = round(len(blocks) * val_ratio)
-    val = sorted(n for b in blocks[:n_val] for n in b)
-    train = sorted(n for b in blocks[n_val:] for n in b)
-    return {"train": train, "val": val, "test": sorted(test)}
+    n_val = round(len(blocks) * val_ratio_no_test)
+    n_test = round(len(blocks) * test_ratio_no_test)
+    return {"train": _flat(blocks[n_val + n_test:]),
+            "val": _flat(blocks[:n_val]),
+            "test": _flat(blocks[n_val:n_val + n_test])}
 
 
 def main():
@@ -56,18 +78,26 @@ def main():
     ann = parse_gt(gt_path)
     class_names = get_class_names(mode)
 
-    # --- split fixe : créé une fois, puis relu ---
+    # --- split fixe : créé une fois, puis relu (sauf s'il n'a pas de test) ---
+    split = None
     if split_path.exists():
         split = json.loads(split_path.read_text())
-        print(f"Split existant relu : {split_path}")
-    else:
+        if not split.get("test"):
+            print("Ancien split sans images de test -> recréé.")
+            split = None
+        else:
+            print(f"Split existant relu : {split_path}")
+    if split is None:
         d = cfg["dataset"]
         split = make_split(names, d["train_val_last_index"], d["val_ratio"],
-                           d["block_size"], cfg["seed"])
+                           d["block_size"], cfg["seed"],
+                           d.get("val_ratio_no_test", 0.15), d.get("test_ratio_no_test", 0.15))
         split_path.parent.mkdir(parents=True, exist_ok=True)
         split_path.write_text(json.dumps(split, indent=1))
         print(f"Split créé : {split_path}")
     print({k: len(v) for k, v in split.items()})
+    assert not (set(split["train"]) & set(split["val"]) | set(split["train"]) & set(split["test"])
+                | set(split["val"]) & set(split["test"])), "Fuite entre sous-ensembles !"
 
     coco_dir = out / "coco"
     coco_dir.mkdir(parents=True, exist_ok=True)
@@ -77,6 +107,12 @@ def main():
         lbl_dir = out / "labels" / sp
         img_dir.mkdir(parents=True, exist_ok=True)
         lbl_dir.mkdir(parents=True, exist_ok=True)
+
+        # supprime les fichiers d'un ancien split (évite les images dans le mauvais dossier)
+        keep = set(split_files)
+        for f in list(img_dir.glob("*.png")) + list(lbl_dir.glob("*.txt")):
+            if f.stem not in keep:
+                f.unlink()
 
         coco = {
             "images": [], "annotations": [],
