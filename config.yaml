@@ -1,0 +1,41 @@
+project: g8-gtsdb
+seed: 42
+
+paths:
+  raw: data/raw/FullIJCNN2013      # dossier contenant 00000.ppm ... et gt.txt
+  processed: data/processed
+  split: splits/split.json         # versionné dans Git : même split pour tout le monde
+  weights: weights
+  reports: reports
+
+dataset:
+  mode: 4cls            # "4cls" (4 catégories) ou "43cls" (43 classes)
+  train_val_last_index: 599   # images 0..599 = train/val ; 600..899 = test
+  val_ratio: 0.2
+  block_size: 10        # blocs d'images consécutives (évite la fuite entre séquences)
+
+inference:
+  conf: 0.25            # seuil de confiance d'affichage (identique pour tous les modèles)
+  iou_nms: 0.5
+  imgsz: 1280           # panneaux petits -> haute résolution
+
+models:
+  yolo11:
+    family: ultralytics
+    pretrained: yolo11s.pt
+    weights: weights/yolo11_best.pt
+  rtdetr:
+    family: ultralytics_rtdetr
+    pretrained: rtdetr-l.pt
+    weights: weights/rtdetr_best.pt
+  faster_rcnn:
+    family: torchvision
+    weights: weights/frcnn_best.pth
+
+degradations:
+  rain:      [1, 2, 3, 4, 5]
+  fog:       [1, 2, 3, 4, 5]
+  night:     [1, 2, 3, 4, 5]
+  blur:      [1, 2, 3, 4, 5]
+  occlusion: [1, 2, 3, 4, 5]
+  jpeg:      [1, 2, 3, 4, 5]

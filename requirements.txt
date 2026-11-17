@@ -1,0 +1,14 @@
+torch>=2.2
+torchvision>=0.17
+ultralytics>=8.3
+opencv-python>=4.9
+albumentations>=1.4
+numpy
+pandas
+matplotlib
+pyyaml
+tqdm
+pycocotools
+torchmetrics
+tensorboard
+streamlit>=1.35
