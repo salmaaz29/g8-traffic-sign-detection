@@ -18,7 +18,8 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
-METHODS = ["clahe", "dehaze", "denoise", "night", "sharpen"]
+METHODS = ["clahe", "dehaze", "denoise", "night", "sharpen",
+           "gamma", "clahe_soft", "night_light", "sharpen_soft"]
 
 
 # ---------------------------------------------------------------------------- outils
@@ -100,6 +101,20 @@ def preprocess(image: np.ndarray, method: str) -> np.ndarray:
         out = _night(image)
     elif method == "sharpen":
         out = _sharpen(image)
+    # --- variantes DOUCES (changent peu l'image : les détecteurs sont entraînés sur des images normales)
+    elif method == "gamma":                       # éclaircissement seul, rien d'autre
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        out = cv2.cvtColor(cv2.merge([_adaptive_gamma_L(l, dark_thr=0.5), a, b]), cv2.COLOR_LAB2BGR)
+    elif method == "clahe_soft":                  # CLAHE faible, sans gamma
+        out = _clahe(image, clip=1.5, gamma=False)
+    elif method == "night_light":                 # gamma + débruitage léger (préserve les petits panneaux)
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        lifted = cv2.cvtColor(cv2.merge([_adaptive_gamma_L(l, dark_thr=0.5), a, b]), cv2.COLOR_LAB2BGR)
+        out = _denoise(lifted, h=3, h_color=3)
+    elif method == "sharpen_soft":
+        out = _sharpen(image, sigma=1.0, amount=0.7)
     else:
         raise ValueError(f"Méthode inconnue : {method!r}. Choix : {METHODS}")
     return out
