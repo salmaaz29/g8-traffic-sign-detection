@@ -32,6 +32,10 @@ COLORS = {"prohibitory": (40, 40, 230), "danger": (0, 165, 255),      # BGR
 DEG_LABELS = {"rain": "Pluie", "fog": "Brouillard", "night": "Nuit", "blur": "Flou de bougé",
               "occlusion": "Occultation", "jpeg": "Compression JPEG"}
 
+# compatibilité : anciennes versions de Streamlit -> use_container_width, récentes -> width="stretch"
+_v = tuple(int(x) for x in st.__version__.split(".")[:2])
+STRETCH = {"width": "stretch"} if _v >= (1, 52) else {"use_container_width": True}
+
 st.set_page_config(page_title="G8 - Détection de panneaux", layout="wide")
 
 
@@ -88,28 +92,28 @@ def rgb(img):
 def show_comparison(img, name, detectors, kind, level, pp, conf):
     proc = make_input(img, name, kind, level, pp)
     c1, c2 = st.columns(2)
-    c1.image(rgb(img), caption="Image d'origine", width="stretch")
+    c1.image(rgb(img), caption="Image d'origine", **STRETCH)
     c2.image(rgb(proc), caption=f"Image envoyée aux modèles (dégradation : {DEG_LABELS.get(kind, 'aucune')}"
                                 f"{f' niv. {level}' if kind != 'none' and level else ''} | prétraitement : {pp})",
-             width="stretch")
+             **STRETCH)
     st.subheader("Détections")
     cols = st.columns(len(detectors))
     rows, details = [], {}
     for col, (label, det) in zip(cols, detectors.items()):
         dets, ms = infer(det, proc, conf)
-        col.image(rgb(draw(proc, dets)), caption=f"{label} : {len(dets)} détection(s)", width="stretch")
+        col.image(rgb(draw(proc, dets)), caption=f"{label} : {len(dets)} détection(s)", **STRETCH)
         rows.append({"Modèle": label, "Détections": len(dets),
                      "Confiance moyenne": round(float(np.mean([d["score"] for d in dets])), 3) if dets else 0.0,
                      "Temps (ms)": round(ms, 1), "FPS": round(1000 / ms, 1) if ms > 0 else 0.0})
         details[label] = dets
-    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
+    st.dataframe(pd.DataFrame(rows), **STRETCH, hide_index=True)
     with st.expander("Détail des détections (classe, score, boîte)"):
         for label, dets in details.items():
             st.markdown(f"**{label}**")
             st.dataframe(pd.DataFrame([{"classe": d.get("label", d["class_id"]), "score": round(d["score"], 3),
                                         "x1": round(d["box"][0]), "y1": round(d["box"][1]),
                                         "x2": round(d["box"][2]), "y2": round(d["box"][3])} for d in dets]),
-                         width="stretch", hide_index=True)
+                         **STRETCH, hide_index=True)
 
 
 # ------------------------------------------------------------------------------- barre latérale
@@ -202,5 +206,5 @@ else:
             st.dataframe(pd.DataFrame([{"Modèle": m, "Détections / image": round(np.mean([s[0] for s in v]), 2),
                                         "Confiance moyenne": round(float(np.nanmean([s[1] for s in v])), 3),
                                         "Temps moyen (ms)": round(np.mean([s[2] for s in v]), 1)}
-                                       for m, v in stats.items()]), width="stretch", hide_index=True)
+                                       for m, v in stats.items()]), **STRETCH, hide_index=True)
     cap.release()
