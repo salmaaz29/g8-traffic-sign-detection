@@ -1,0 +1,15 @@
+modèle,dégradation,moyenne niv. 1-5,niveau 3,niveau 5,propre,n_niveaux
+RT-DETR,image propre,,,,0.987,0
+RT-DETR,Pluie,0.688,0.833,0.173,,5
+RT-DETR,Brouillard,0.943,0.967,0.8,,5
+RT-DETR,Nuit,0.515,0.473,0.073,,5
+RT-DETR,Flou de bougé,0.584,0.593,0.187,,5
+RT-DETR,Occultation,0.705,0.813,0.287,,5
+RT-DETR,Compression JPEG,0.617,0.633,0.187,,5
+YOLO11,image propre,,,,0.987,0
+YOLO11,Pluie,0.735,0.907,0.287,,5
+YOLO11,Brouillard,0.873,0.947,0.627,,5
+YOLO11,Nuit,0.495,0.453,0.047,,5
+YOLO11,Flou de bougé,0.569,0.627,0.127,,5
+YOLO11,Occultation,0.711,0.873,0.273,,5
+YOLO11,Compression JPEG,0.709,0.827,0.213,,5

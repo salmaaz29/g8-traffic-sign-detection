@@ -7,7 +7,9 @@ Métriques :
   - map50, map50_95 : pycocotools, détections avec un seuil de confiance très bas (0.001)
   - precision, recall : à un seuil de confiance d'exploitation (0.25) et IoU 0.5, classe respectée
   - mean_conf       : confiance moyenne des détections gardées à 0.25
-  - ms_per_image, fps : temps de Detector.predict() seul (hors dégradation et prétraitement)
+  - ms_per_image, fps : temps de Detector.predict() au seuil d'exploitation (0.25), hors dégradation
+                        et prétraitement. (Au seuil 0.001 le modèle renvoie des centaines de boîtes candidates :
+                        ce temps-là est gardé à part dans 'ms_lowconf'.)
 
 Prérequis côté détecteur : predict(image_bgr, conf) -> [{"box": (x1,y1,x2,y2), "score", "class_id"}]
 avec class_id de 0 à N-1 (catégorie COCO correspondante = class_id + 1).
@@ -111,7 +113,8 @@ def _coco_map(coco: dict, images: list, dets_json: list):
 
 # ----------------------------------------------------------------------- évaluation
 def evaluate(detector, images_dir, coco_json, degradation=None, level=0, preprocess=None,
-             conf_eval=0.001, conf_op=0.25, iou_thr=0.5, limit=None, warmup=3, progress=True):
+             conf_eval=0.001, conf_op=0.25, iou_thr=0.5, limit=None, warmup=3, progress=True,
+             time_at_op=True):
     """Évalue `detector` sur les images de `images_dir` annotées dans `coco_json`.
 
     degradation / level : dégradation appliquée en mémoire (reproductible, rien n'est écrit sur disque)
@@ -130,7 +133,7 @@ def evaluate(detector, images_dir, coco_json, degradation=None, level=0, preproc
             gt_by_img[a["image_id"]].append({"box": (x, y, x + w, y + h),
                                              "class_id": a["category_id"] - 1})
 
-    dets_json, dets_by_img, times = [], defaultdict(list), []
+    dets_json, dets_by_img, times, times_low = [], defaultdict(list), [], []
     for k, im in enumerate(tqdm(images, disable=not progress, desc="eval")):
         img = cv2.imread(str(Path(images_dir) / im["file_name"]))
         if img is None:
@@ -145,9 +148,14 @@ def evaluate(detector, images_dir, coco_json, degradation=None, level=0, preproc
         if k == 0:                                    # échauffement GPU (non chronométré)
             for _ in range(warmup):
                 detector.predict(img, conf=conf_eval)
+                detector.predict(img, conf=conf_op)
         t0 = time.perf_counter()
-        dets = detector.predict(img, conf=conf_eval)
-        times.append(time.perf_counter() - t0)
+        dets = detector.predict(img, conf=conf_eval)        # sert au calcul du mAP
+        times_low.append(time.perf_counter() - t0)
+        if time_at_op:                                      # vitesse « en conditions réelles »
+            t0 = time.perf_counter()
+            detector.predict(img, conf=conf_op)
+            times.append(time.perf_counter() - t0)
 
         for d in dets:
             if not 0 <= d["class_id"] < n_cls:
@@ -160,12 +168,13 @@ def evaluate(detector, images_dir, coco_json, degradation=None, level=0, preproc
 
     map50, map50_95, per_class = _coco_map(coco, images, dets_json)
     op = _operating_point(gt_by_img, dets_by_img, conf_op, iou_thr)
-    ms = 1000 * float(np.mean(times))
+    ms_low = 1000 * float(np.mean(times_low))
+    ms = 1000 * float(np.mean(times)) if times else ms_low
     return {"n_images": len(images), "map50": map50, "map50_95": map50_95,
             "precision": op["precision"], "recall": op["recall"],
             "mean_conf": op["mean_conf"], "mean_conf_tp": op["mean_conf_tp"],
             "tp": op["tp"], "fp": op["fp"], "fn": op["fn"], "n_gt": op["n_gt"], "n_det": op["n_det"],
-            "ms_per_image": ms, "fps": 1000.0 / ms if ms > 0 else 0.0,
+            "ms_per_image": ms, "fps": 1000.0 / ms if ms > 0 else 0.0, "ms_lowconf": ms_low,
             "per_class_ap50": per_class}
 
 
@@ -228,6 +237,7 @@ def main():
           f"niveau={a.level} | {res['n_images']} images")
     for k in ["map50", "map50_95", "precision", "recall", "mean_conf", "ms_per_image", "fps"]:
         print(f"  {k:13s}: {res[k]:.3f}")
+    print(f"  (vitesse mesurée à conf=0.25 ; à conf=0.001 : {res['ms_lowconf']:.1f} ms/image)")
     print("  AP50 par classe :", {k: round(v, 3) for k, v in res["per_class_ap50"].items()})
     if a.out:
         append_csv(a.out, dict(res, model=a.model, preprocess=a.preprocess,

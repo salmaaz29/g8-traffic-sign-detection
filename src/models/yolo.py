@@ -16,10 +16,12 @@ class UltralyticsDetector(Detector):
         # Ultralytics considère un ndarray comme BGR (convention OpenCV)
         res = self.model.predict(image, conf=conf, iou=self.iou, imgsz=self.imgsz,
                                  device=self.device, verbose=False)[0]
-        out = []
-        for b in res.boxes:
-            cid = int(b.cls)
-            x1, y1, x2, y2 = (float(v) for v in b.xyxy[0])
-            out.append({"box": (x1, y1, x2, y2), "score": float(b.conf),
-                        "class_id": cid, "label": self.model.names[cid]})
-        return out
+        b = res.boxes
+        if b is None or len(b) == 0:
+            return []
+        xyxy = b.xyxy.cpu().numpy()          # un seul transfert GPU -> CPU pour toutes les boîtes
+        score = b.conf.cpu().numpy()
+        cls = b.cls.cpu().numpy().astype(int)
+        names = self.model.names
+        return [{"box": tuple(float(v) for v in xyxy[i]), "score": float(score[i]),
+                 "class_id": int(cls[i]), "label": names[int(cls[i])]} for i in range(len(cls))]
