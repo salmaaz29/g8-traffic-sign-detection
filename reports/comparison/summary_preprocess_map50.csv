@@ -1,0 +1,91 @@
+modèle,prétraitement,dégradation,gain moyen,n
+Faster R-CNN,clahe_soft,Pluie,,0
+Faster R-CNN,clahe_soft,Brouillard,,0
+Faster R-CNN,clahe_soft,Nuit,-0.03,5
+Faster R-CNN,clahe_soft,Flou de bougé,,0
+Faster R-CNN,clahe_soft,Occultation,,0
+Faster R-CNN,clahe_soft,Compression JPEG,,0
+Faster R-CNN,dehaze,Pluie,,0
+Faster R-CNN,dehaze,Brouillard,0.016,5
+Faster R-CNN,dehaze,Nuit,,0
+Faster R-CNN,dehaze,Flou de bougé,,0
+Faster R-CNN,dehaze,Occultation,,0
+Faster R-CNN,dehaze,Compression JPEG,,0
+Faster R-CNN,denoise,Pluie,,0
+Faster R-CNN,denoise,Brouillard,,0
+Faster R-CNN,denoise,Nuit,,0
+Faster R-CNN,denoise,Flou de bougé,,0
+Faster R-CNN,denoise,Occultation,,0
+Faster R-CNN,denoise,Compression JPEG,0.036,5
+Faster R-CNN,gamma,Pluie,,0
+Faster R-CNN,gamma,Brouillard,,0
+Faster R-CNN,gamma,Nuit,-0.101,5
+Faster R-CNN,gamma,Flou de bougé,,0
+Faster R-CNN,gamma,Occultation,,0
+Faster R-CNN,gamma,Compression JPEG,,0
+Faster R-CNN,sharpen_soft,Pluie,,0
+Faster R-CNN,sharpen_soft,Brouillard,,0
+Faster R-CNN,sharpen_soft,Nuit,,0
+Faster R-CNN,sharpen_soft,Flou de bougé,-0.01,5
+Faster R-CNN,sharpen_soft,Occultation,,0
+Faster R-CNN,sharpen_soft,Compression JPEG,,0
+RT-DETR,clahe_soft,Pluie,,0
+RT-DETR,clahe_soft,Brouillard,,0
+RT-DETR,clahe_soft,Nuit,-0.046,5
+RT-DETR,clahe_soft,Flou de bougé,,0
+RT-DETR,clahe_soft,Occultation,,0
+RT-DETR,clahe_soft,Compression JPEG,,0
+RT-DETR,dehaze,Pluie,,0
+RT-DETR,dehaze,Brouillard,0.031,5
+RT-DETR,dehaze,Nuit,,0
+RT-DETR,dehaze,Flou de bougé,,0
+RT-DETR,dehaze,Occultation,,0
+RT-DETR,dehaze,Compression JPEG,,0
+RT-DETR,denoise,Pluie,,0
+RT-DETR,denoise,Brouillard,,0
+RT-DETR,denoise,Nuit,,0
+RT-DETR,denoise,Flou de bougé,,0
+RT-DETR,denoise,Occultation,,0
+RT-DETR,denoise,Compression JPEG,0.046,5
+RT-DETR,gamma,Pluie,,0
+RT-DETR,gamma,Brouillard,,0
+RT-DETR,gamma,Nuit,-0.095,5
+RT-DETR,gamma,Flou de bougé,,0
+RT-DETR,gamma,Occultation,,0
+RT-DETR,gamma,Compression JPEG,,0
+RT-DETR,sharpen_soft,Pluie,,0
+RT-DETR,sharpen_soft,Brouillard,,0
+RT-DETR,sharpen_soft,Nuit,,0
+RT-DETR,sharpen_soft,Flou de bougé,0.001,5
+RT-DETR,sharpen_soft,Occultation,,0
+RT-DETR,sharpen_soft,Compression JPEG,,0
+YOLO11,clahe_soft,Pluie,,0
+YOLO11,clahe_soft,Brouillard,,0
+YOLO11,clahe_soft,Nuit,-0.017,5
+YOLO11,clahe_soft,Flou de bougé,,0
+YOLO11,clahe_soft,Occultation,,0
+YOLO11,clahe_soft,Compression JPEG,,0
+YOLO11,dehaze,Pluie,,0
+YOLO11,dehaze,Brouillard,0.071,5
+YOLO11,dehaze,Nuit,,0
+YOLO11,dehaze,Flou de bougé,,0
+YOLO11,dehaze,Occultation,,0
+YOLO11,dehaze,Compression JPEG,,0
+YOLO11,denoise,Pluie,,0
+YOLO11,denoise,Brouillard,,0
+YOLO11,denoise,Nuit,,0
+YOLO11,denoise,Flou de bougé,,0
+YOLO11,denoise,Occultation,,0
+YOLO11,denoise,Compression JPEG,0.056,5
+YOLO11,gamma,Pluie,,0
+YOLO11,gamma,Brouillard,,0
+YOLO11,gamma,Nuit,-0.052,5
+YOLO11,gamma,Flou de bougé,,0
+YOLO11,gamma,Occultation,,0
+YOLO11,gamma,Compression JPEG,,0
+YOLO11,sharpen_soft,Pluie,,0
+YOLO11,sharpen_soft,Brouillard,,0
+YOLO11,sharpen_soft,Nuit,,0
+YOLO11,sharpen_soft,Flou de bougé,-0.006,5
+YOLO11,sharpen_soft,Occultation,,0
+YOLO11,sharpen_soft,Compression JPEG,,0
