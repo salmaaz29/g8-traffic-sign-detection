@@ -8,7 +8,7 @@ Poids attendus dans weights/ : yolo11_best.pt, rtdetr_best.pt, frcnn_best.pth
 from __future__ import annotations
 
 import sys
-import tempfile
+
 import time
 from pathlib import Path
 
@@ -286,7 +286,7 @@ if not chosen:
     st.stop()
 detectors = {label: get_detector(*available[label]) for label in chosen}
 
-source = st.radio("Source", ["Image", "Vidéo de conduite"], horizontal=True, label_visibility="collapsed")
+source = "Image"
 
 # ------------------------------------------------------------------------------------ image
 if source == "Image":
@@ -309,56 +309,3 @@ if source == "Image":
           '<span>Dépose une image ci-dessus pour lancer la comparaison.</span></div>')
     else:
         show_comparison(img, name, detectors, kind, level, pp, conf)
-
-# ------------------------------------------------------------------------------------ vidéo
-else:
-    vid = st.file_uploader("Vidéo de conduite", type=["mp4", "avi", "mov", "mkv"])
-    if vid is None:
-        H('<div class="empty"><b>Aucune vidéo chargée</b>'
-          '<span>Dépose une vidéo ci-dessus, puis choisis une image à analyser ou lance l\'analyse complète.</span></div>')
-        st.stop()
-    tmp = Path(tempfile.gettempdir()) / f"g8_{vid.name}"
-    tmp.write_bytes(vid.getvalue())
-    cap = cv2.VideoCapture(str(tmp))
-    n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
-    if n <= 0:
-        st.error("Vidéo illisible. Essaie un fichier mp4 (H.264).")
-        st.stop()
-    idx = st.slider("Image de la vidéo", 0, n - 1, 0, format="%d")
-    st.caption(f"Image {idx + 1} sur {n}, à {idx / fps:.1f} s")
-    cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-    ok, frame = cap.read()
-    if not ok:
-        st.error("Impossible de lire cette image.")
-        st.stop()
-    show_comparison(frame, f"{vid.name}#{idx}", detectors, kind, level, pp, conf)
-
-    st.write("")
-    with st.expander("Analyser toute la vidéo"):
-        c1, c2 = st.columns(2)
-        stride = c1.number_input("Analyser une image sur", 1, 300, max(1, int(fps)))
-        max_frames = c2.number_input("Nombre maximum d'images", 5, 300, 60)
-        if st.button("Lancer l'analyse", type="primary"):
-            idxs = list(range(0, n, int(stride)))[:int(max_frames)]
-            bar, stats = st.progress(0.0), {m: [] for m in detectors}
-            for k, i in enumerate(idxs):
-                cap.set(cv2.CAP_PROP_POS_FRAMES, i)
-                ok, fr = cap.read()
-                if not ok:
-                    continue
-                proc = make_input(fr, f"{vid.name}#{i}", kind, level, pp)
-                for label, det in detectors.items():
-                    dets, ms = infer(det, proc, conf)
-                    stats[label].append((len(dets), np.mean([d["score"] for d in dets]) if dets else np.nan, ms))
-                bar.progress((k + 1) / len(idxs))
-            t = [round(i / fps, 1) for i in idxs[:len(next(iter(stats.values())))]]
-            st.markdown("**Nombre de détections au fil de la vidéo** (axe : secondes)")
-            st.line_chart(pd.DataFrame({m: [s[0] for s in v] for m, v in stats.items()}, index=t))
-            st.markdown("**Confiance moyenne au fil de la vidéo**")
-            st.line_chart(pd.DataFrame({m: [s[1] for s in v] for m, v in stats.items()}, index=t))
-            st.dataframe(pd.DataFrame([{"Modèle": m, "Détections par image": round(float(np.mean([s[0] for s in v])), 2),
-                                        "Confiance moyenne": round(float(np.nanmean([s[1] for s in v])), 3),
-                                        "Temps moyen (ms)": round(float(np.mean([s[2] for s in v])), 1)}
-                                       for m, v in stats.items()]), hide_index=True)
-    cap.release()
