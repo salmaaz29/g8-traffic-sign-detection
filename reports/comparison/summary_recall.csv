@@ -1,4 +1,11 @@
 modèle,dégradation,moyenne niv. 1-5,niveau 3,niveau 5,propre,n_niveaux
+Faster R-CNN,image propre,,,,0.987,0
+Faster R-CNN,Pluie,0.643,0.773,0.113,,5
+Faster R-CNN,Brouillard,0.943,0.953,0.88,,5
+Faster R-CNN,Nuit,0.683,0.76,0.253,,5
+Faster R-CNN,Flou de bougé,0.539,0.527,0.14,,5
+Faster R-CNN,Occultation,0.668,0.787,0.2,,5
+Faster R-CNN,Compression JPEG,0.705,0.807,0.267,,5
 RT-DETR,image propre,,,,0.987,0
 RT-DETR,Pluie,0.688,0.833,0.173,,5
 RT-DETR,Brouillard,0.943,0.967,0.8,,5

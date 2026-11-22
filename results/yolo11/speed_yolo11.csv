@@ -1,0 +1,2 @@
+model,preprocess,degradation,level,n_images,map50,map50_95,precision,recall,mean_conf,mean_conf_tp,tp,fp,fn,n_gt,n_det,ms_per_image,fps,per_class_ap50
+yolo11,none,clean,0,90,0.9972418670438473,0.8790433767153031,0.9487179487179487,0.9866666666666667,0.8950161276719509,0.9064965509885067,148,8,2,150,156,28.721851177710455,34.81669735744778,"{""prohibitory"": 1.0, ""danger"": 1.0, ""mandatory"": 0.9889674681753892, ""other"": 1.0}"

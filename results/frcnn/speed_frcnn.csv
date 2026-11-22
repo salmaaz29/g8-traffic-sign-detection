@@ -1,0 +1,2 @@
+model,preprocess,degradation,level,n_images,map50,map50_95,precision,recall,mean_conf,mean_conf_tp,tp,fp,fn,n_gt,n_det,ms_per_image,fps,per_class_ap50
+frcnn,none,clean,0,90,0.99041107002322,0.8254471417664061,0.8757396449704142,0.9866666666666667,0.9276937909380218,0.9798387295088252,148,21,2,150,169,182.65824562222153,5.474704941972484,"{""prohibitory"": 1.0, ""danger"": 0.9988351776354105, ""mandatory"": 0.9934700612918436, ""other"": 0.9693390411656257}"
